@@ -1,9 +1,11 @@
+#include <stdio.h>
 #include <netdb.h> 
 #include <netinet/in.h> 
 #include <stdlib.h> 
 #include <string.h> 
 #include <sys/socket.h> 
 #include <sys/types.h> 
+#include <unistd.h>
 #define MAX 80 
 #define PORT 8080 
 #define SA struct sockaddr 
@@ -18,7 +20,7 @@ void func(int sockfd)
         bzero(buff, MAX); 
   
         // read the message from client and copy it in buffer 
-        read(sockfd, buff, sizeof(buff)); 
+        recv(sockfd, buff, sizeof(buff),0); 
         // print buffer which contains the client contents 
         printf("From client: %s\t To client : ", buff); 
         bzero(buff, MAX); 
@@ -28,7 +30,7 @@ void func(int sockfd)
             ; 
   
         // and send that buffer to client 
-        write(sockfd, buff, sizeof(buff)); 
+        send(sockfd, buff, sizeof(buff), 0); 
   
         // if msg contains "Exit" then server exit and chat ended. 
         if (strncmp("exit", buff, 4) == 0) { 
@@ -75,9 +77,9 @@ int main()
     else
         printf("Server listening..\n"); 
     len = sizeof(cli); 
-  
+    
     // Accept the data packet from client and verification 
-    connfd = accept(sockfd, (SA*)&cli, &len); 
+    connfd = accept(sockfd, NULL, NULL); 
     if (connfd < 0) { 
         printf("server acccept failed...\n"); 
         exit(0); 
@@ -90,4 +92,5 @@ int main()
   
     // After chatting close the socket 
     close(sockfd); 
+    return 0;
 } 
