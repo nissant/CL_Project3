@@ -1,0 +1,49 @@
+#!/usr/bin/python2.7 -tt
+
+from socket import *
+import sys
+
+fail_response = "HTTP/1.1 404 Not Found\r\nContent-type: text/html\r\nContent-length: 113\r\n" \
+                "\r\n\r\n<html><head><title>Not Found</title></head><body>\r\nSorry, the object you requested was not found." \
+                "\r\n</body></html>\r\n\r\n"
+
+response = "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: "
+
+
+if __name__ == "__main__":
+    s = socket()
+    # Browser mode
+    # s1.bind(("localhost", 80))
+    # s1.listen(10)
+    # s = s1.accept()[0]
+    try:
+        port = int(sys.argv[1])     # Browser mode: 80
+    except:
+        print("Invalid port argument: " + sys.argv[1])
+
+    s.connect(("localhost", port))
+    print ("server connected on port: " + str(port))
+
+    endpoint_counter = 1
+    request = ""
+    while 1:
+        req = s.recv(1024)
+        # Browser mode
+        # if req == "":
+        #    s = s1.accept()[0]  # socket has timed out on refresh
+        #   request = ""
+        #    continue
+        # else:
+        request += req
+        if request.count('\r\n\r\n') == 0:
+            continue
+        if request.count('\r\n\r\n') == 1:
+            lines = request.split('\r\n')
+            if lines[0].find('GET /counter ') == -1:
+                s.send(fail_response)       # Requested end point is not counter
+            else:
+                res = response + str(len(str(endpoint_counter))) + "\r\n\r\n" + str(endpoint_counter) + "\r\n\r\n"
+                s.send(res)
+                endpoint_counter += 1
+        request = ""
+
