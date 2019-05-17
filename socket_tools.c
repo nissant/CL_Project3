@@ -20,9 +20,8 @@
 
 const char *HTTP_SEPARATORE = "\r\n\r\n";
 
-// Generates a random port number in range [lower, upper].
 unsigned int getRandomPortInRange()
-{
+{  // Generates a random port number in range [lower, upper].
   if (random() % 2) {
     return (unsigned int)FAIL_PORT;
   } else {
@@ -51,9 +50,9 @@ void createBindSocket_LogPort(int *socket_ptr, FILE *file_log)
   // Binding newly created socket to given IP and verification
   while ((bind(new_socket, (SA *)&service, sizeof(service))) != 0) {
     error_code = errno;
-    // printf("Error code: %d\n", error_code);
+
     if (EADDRINUSE == error_code || EINVAL == error_code || EACCES == error_code) {
-      // printf("Port %d already in use, trying again...\n", FAIL_PORT);
+
       port = getRandomPortInRange();
       service.sin_port = htons(port);
     } else {
@@ -75,20 +74,19 @@ void connectServersClient()
   createBindSocket_LogPort(&sockfd_server, server_port_fp);
   http_port_fp = fopen("http_port", "w");
   createBindSocket_LogPort(&sockfd_client, http_port_fp);
-  // printf("Sockets successfully binded..\n");
+
   // Now server is ready to listen and verification
   if ((listen(sockfd_client, LISTEN_COUNT)) != 0 || (listen(sockfd_server, LISTEN_COUNT)) != 0) {
     printf("Listen failed...\n");
     exit(-1);
   }
-  // else { printf("LB listening..\n"); }
+
   // Accept the data packet from client and verification
   int i;
   for (i = 0; i < SERVER_COUNT; i++) {
     connfd_server[i] = acceptSession(sockfd_server);
   }
   connfd_client = acceptSession(sockfd_client);
-  // printf("Servers and client successfully acccepted\n");
 }
 
 int acceptSession(int sokcet)
@@ -127,15 +125,15 @@ int send_msg(int connfd_client, char *buffer)
   int RemainingBytesToSend = strlen(buffer);  // Sent message structure is known and in my control, thus strlen is fine
 
   while (RemainingBytesToSend > 0) {
-    /* send does not guarantee that the entire message is sent */
+    // send does not guarantee that the entire message is sent
     BytesTransferred = send(connfd_client, CurPlacePtr, RemainingBytesToSend, 0);
     if (BytesTransferred <= 0) {
-      // printf("send() failed, error %d\n", WSAGetLastError() );
-      return -1;
+      printf("send() failed, error %d\n", errno);
+      exit(-1);
     }
 
     RemainingBytesToSend -= BytesTransferred;
-    CurPlacePtr += BytesTransferred;  // <ISP> pointer arithmetic
+    CurPlacePtr += BytesTransferred;  // pointer arithmetic
   }
 
   return 0;
@@ -159,7 +157,7 @@ int recv_msg(int socket, enum msg_type msgType, char **msgBuffer, unsigned int *
 
     if (memSeparatoreCount(*msgBuffer, TotalBytesTransferred) == msgType) {
       // MSG Complete - end the session
-      // printf("Got msg. Msg type: %d \n %s \n exiting...\n", msgType, *msgBuffer);
+      close(socket);
       return 0;
     }
 

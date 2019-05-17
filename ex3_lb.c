@@ -15,16 +15,11 @@ void loadBalanceTraffic()
     // read message from client and copy it in buffer
     recv_msg(connfd_client, GET, &buffer, &buffer_size);
 
-    // printf("From client to L.B:\n %s ", buffer);
-
     // handle request by next server in line
     send_msg(connfd_server[next_server_index], buffer);
     recv_msg(connfd_server[next_server_index], HTTP, &buffer, &buffer_size);
 
-    // printf("From server %d to L.B:\n %s ", next_server_index, buffer);
-
-    // send response back to client
-    // printf("Buffer size: %d\n", buffer_size);
+    // send response back to client and get next server in cyclic line
     send_msg(connfd_client, buffer);
     next_server_index++;
     next_server_index = (next_server_index == SERVER_COUNT ? 0 : next_server_index);
