@@ -24,7 +24,8 @@ void loadBalanceTraffic()
     next_server_index++;
     next_server_index = (next_server_index == SERVER_COUNT ? 0 : next_server_index);
 
-    // connect new session
+    // connect new client session
+    closeSession(connfd_client);
     connfd_client = acceptSession(sockfd_client);
   }
 }

@@ -99,6 +99,14 @@ int acceptSession(int sokcet)
   return connection;
 }
 
+void closeSession(int socket)
+{
+  if (close(socket) != 0) {
+    printf("close(socket) failed, error %d\n", errno);
+    exit(-1);
+  }
+}
+
 unsigned int memSeparatoreCount(char *inBuffer, unsigned int dataSize)
 {
   unsigned int count = 0;
@@ -157,20 +165,21 @@ int recv_msg(int socket, enum msg_type msgType, char **msgBuffer, unsigned int *
 
     if (memSeparatoreCount(*msgBuffer, TotalBytesTransferred) == msgType) {
       // MSG Complete - end the session
-      close(socket);
       return 0;
     }
 
-    // MSG Not Complete, allocate more buffer space to make sure no data is lost in next transaction
-    *msgBuffer = (char *)realloc(*msgBuffer, sizeof(char) * (*bufferSize + BUFFER_INIT_SIZE));
-    if (*msgBuffer == NULL) {
-      printf("Realloc of msg buffer failed! Can't complete the task.");
-      exit(-1);
+    // MSG Not Complete, check if more buffer space allocation is needed to make sure no data is lost in next
+    // transaction. Keep at least BUFFER_INIT_SIZE bytes available.
+    if (TotalAvailableBuffer < BUFFER_INIT_SIZE) {
+      *msgBuffer = (char *)realloc(*msgBuffer, sizeof(char) * (*bufferSize + BUFFER_INIT_SIZE));
+      if (*msgBuffer == NULL) {
+        printf("Realloc of msg buffer failed! Can't complete the task.");
+        exit(-1);
+      }
+      TotalAvailableBuffer += BUFFER_INIT_SIZE;
+      *bufferSize += BUFFER_INIT_SIZE;
     }
-    TotalAvailableBuffer += BUFFER_INIT_SIZE;
-    *bufferSize += BUFFER_INIT_SIZE;
   }
-  printf("Returned -1 from recv()\n");
+  // recv() returns zero if connection was gracefully disconnected.
   exit(-1);
-  // return -1; // recv() returns zero if connection was gracefully disconnected.
 }
