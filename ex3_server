@@ -22,7 +22,7 @@ if __name__ == "__main__":
         print("Invalid port argument: " + sys.argv[1])
 
     s.connect(("localhost", port))
-    print ("server connected on port: " + str(port))
+    # print ("server connected on port: " + str(port))
 
     endpoint_counter = 1
     request = ""

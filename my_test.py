@@ -42,3 +42,4 @@ assert lines[-2:] == ['', '']
 
 print content
 
+

@@ -1,42 +1,43 @@
-#include <stdio.h>
-#include <stdlib.h> 
-#include <string.h> 
-#include <errno.h>
-#include <time.h>
 #include "socket_tools.h"
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-// Function designed for chat between client and server. 
+void loadBalanceTraffic()
+{
+  char *buffer = (char *)malloc(sizeof(char) * BUFFER_INIT_SIZE);
+  unsigned int buffer_size = BUFFER_INIT_SIZE;
+  int next_server_index = 0;
+  // infinite loop
+  while (1) {
+    // read message from client and copy it in buffer
+    recv_msg(connfd_client, GET, &buffer, &buffer_size);
 
-void load_balance_traffic() 
-{ 
-	char buffer[BUFFER_INIT_SIZE];	// char response_buffer[BUFFER_INIT_SIZE];
-	int buffer_size = BUFFER_INIT_SIZE;
-	int next_server_index = 0;
-    // infinite loop for chat 
-    	while (1) { 
-		bzero(buffer, buffer_size);
-		// socket, msg type enum, buffer, buffer size
-		recv_msg(connfd_client, GET,&buffer, &buffer_size);	// read the message from client and copy it in buffer 
+    // printf("From client to L.B:\n %s ", buffer);
 
-		printf("From client to L.B:\n %s ", msg_buffer);
+    // handle request by next server in line
+    send_msg(connfd_server[next_server_index], buffer);
+    recv_msg(connfd_server[next_server_index], HTTP, &buffer, &buffer_size);
 
-		if (get_server_response(next_server_index, &msg_buffer, &buffer_size) == 0) {
-			printf("Server %d disconnected! \n", next_server_index);
-			return;
-		}
+    // printf("From server %d to L.B:\n %s ", next_server_index, buffer);
 
-		send_msg(connfd_client,msg_buffer, buffer_size);
-		next_server_index++;
-		if (next_server_index == SERVER_COUNT) { next_server_index = 0; }
-		wait_new_client();
-    } 
-} 
+    // send response back to client
+    // printf("Buffer size: %d\n", buffer_size);
+    send_msg(connfd_client, buffer);
+    next_server_index++;
+    next_server_index = (next_server_index == SERVER_COUNT ? 0 : next_server_index);
 
+    // connect new session
+    connfd_client = acceptSession(sockfd_client);
+  }
+}
 
-int main() { 
-	srandom(time(0));		// Use current time as seed for random generator
-	connect_servers_client();
-	load_balance_traffic();
-    	return 0;
-} 
-
+int main()
+{
+  srandom(time(0));  // Use current time as seed for random generator
+  connectServersClient();
+  loadBalanceTraffic();
+  return 0;
+}
