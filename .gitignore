@@ -1,3 +1,6 @@
+# ex3 extensionless binary
+ex3_lb
+
 # Hidden Files
 .*
 !.gitignore
