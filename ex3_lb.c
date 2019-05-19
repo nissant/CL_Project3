@@ -5,14 +5,17 @@
 #include <string.h>
 #include <time.h>
 
+#define NO_BODY_REQUEST 1  // HTTP request with no body part (GET) - 1 separator
+#define RESPONSE 2         // HTTP response with body - 2 separators
+
 void loadBalanceTraffic()
 {
   char *buffer = (char *)malloc(sizeof(char) * BUFFER_INIT_SIZE);
   unsigned int buffer_size = BUFFER_INIT_SIZE;
   int next_server_index = 0;
-  // infinite loop
+
   while (1) {
-    // read request from client and copy it in buffer
+    // read request from client and copy it to buffer
     recv_msg(connfd_client, NO_BODY_REQUEST, &buffer, &buffer_size);
 
     // handle request by next server in cyclic line

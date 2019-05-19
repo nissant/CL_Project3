@@ -15,9 +15,8 @@
 #define FAIL_PORT 80
 #define LOWER_PORT 1024
 #define UPPER_PORT 64000
-#define SA struct sockaddr
-#define HTTP_SEPARATORE_SIZE 4
 
+#define HTTP_SEPARATORE_SIZE 4
 const char *HTTP_SEPARATORE = "\r\n\r\n";
 
 unsigned int getRandomPortInRange()
@@ -48,11 +47,10 @@ void createBindSocket_LogPort(int *socket_ptr, FILE *file_log)
   service.sin_port = htons(port);
 
   // Binding newly created socket to given IP and verification
-  while ((bind(new_socket, (SA *)&service, sizeof(service))) != 0) {
+  while ((bind(new_socket, (struct sockaddr *)&service, sizeof(service))) != 0) {
     error_code = errno;
 
     if (EADDRINUSE == error_code || EINVAL == error_code || EACCES == error_code) {
-
       port = getRandomPortInRange();
       service.sin_port = htons(port);
     } else {
@@ -147,7 +145,7 @@ int send_msg(int connfd_client, char *buffer)
   return 0;
 }
 
-int recv_msg(int socket, enum http_msg_type msgType, char **msgBuffer, unsigned int *bufferSize)
+int recv_msg(int socket, unsigned int msgSeparatorCount, char **msgBuffer, unsigned int *bufferSize)
 {
   char *CurPlacePtr = *msgBuffer;
   int BytesJustTransferred = 0;
@@ -163,7 +161,7 @@ int recv_msg(int socket, enum http_msg_type msgType, char **msgBuffer, unsigned 
     TotalBytesTransferred += BytesJustTransferred;
     TotalAvailableBuffer -= BytesJustTransferred;
 
-    if (memSeparatoreCount(*msgBuffer, TotalBytesTransferred) == msgType) {
+    if (memSeparatoreCount(*msgBuffer, TotalBytesTransferred) == msgSeparatorCount) {
       // MSG Complete - end the session
       return 0;
     }
