@@ -147,7 +147,7 @@ int send_msg(int connfd_client, char *buffer)
   return 0;
 }
 
-int recv_msg(int socket, enum msg_type msgType, char **msgBuffer, unsigned int *bufferSize)
+int recv_msg(int socket, enum http_msg_type msgType, char **msgBuffer, unsigned int *bufferSize)
 {
   char *CurPlacePtr = *msgBuffer;
   int BytesJustTransferred = 0;

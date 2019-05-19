@@ -12,12 +12,12 @@ void loadBalanceTraffic()
   int next_server_index = 0;
   // infinite loop
   while (1) {
-    // read message from client and copy it in buffer
-    recv_msg(connfd_client, GET, &buffer, &buffer_size);
+    // read request from client and copy it in buffer
+    recv_msg(connfd_client, NO_BODY_REQUEST, &buffer, &buffer_size);
 
-    // handle request by next server in line
+    // handle request by next server in cyclic line
     send_msg(connfd_server[next_server_index], buffer);
-    recv_msg(connfd_server[next_server_index], HTTP, &buffer, &buffer_size);
+    recv_msg(connfd_server[next_server_index], RESPONSE, &buffer, &buffer_size);
 
     // send response back to client and get next server in cyclic line
     send_msg(connfd_client, buffer);
