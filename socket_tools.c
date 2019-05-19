@@ -19,7 +19,7 @@
 #define HTTP_SEPARATORE_SIZE 4
 const char *HTTP_SEPARATORE = "\r\n\r\n";
 
-unsigned int getRandomPortInRange()
+unsigned int getRandomPortInRange_TestFail()
 {  // Generates a random port number in range [lower, upper].
   if (random() % 2) {
     return (unsigned int)FAIL_PORT;
@@ -43,7 +43,7 @@ void createBindSocket_LogPort(int *socket_ptr, FILE *file_log)
   // assign IP, Port will fail half of the calls this will test the random port feature
   service.sin_family = AF_INET;
   service.sin_addr.s_addr = INADDR_ANY;
-  port = getRandomPortInRange();
+  port = getRandomPortInRange_TestFail();
   service.sin_port = htons(port);
 
   // Binding newly created socket to given IP and verification
@@ -51,7 +51,7 @@ void createBindSocket_LogPort(int *socket_ptr, FILE *file_log)
     error_code = errno;
 
     if (EADDRINUSE == error_code || EINVAL == error_code || EACCES == error_code) {
-      port = getRandomPortInRange();
+      port = getRandomPortInRange_TestFail();
       service.sin_port = htons(port);
     } else {
       printf("socket bind failed...\n");
