@@ -20,7 +20,7 @@
 const char *HTTP_SEPARATORE = "\r\n\r\n";
 
 unsigned int getRandomPortInRange_TestFail()
-{  // Generates a random port number in range [lower, upper].
+{
   if (random() % 2) {
     return (unsigned int)FAIL_PORT;
   } else {
@@ -30,7 +30,6 @@ unsigned int getRandomPortInRange_TestFail()
 
 void createBindSocket_LogPort(int *socket_ptr, FILE *file_log)
 {
-  // socket create and verification
   int new_socket;
   int error_code;
   unsigned int port;
@@ -40,13 +39,12 @@ void createBindSocket_LogPort(int *socket_ptr, FILE *file_log)
     printf("socket creation failed...\n");
   }
   bzero(&service, sizeof(service));
-  // assign IP, Port will fail half of the calls this will test the random port feature
+
   service.sin_family = AF_INET;
   service.sin_addr.s_addr = INADDR_ANY;
   port = getRandomPortInRange_TestFail();
   service.sin_port = htons(port);
 
-  // Binding newly created socket to given IP and verification
   while ((bind(new_socket, (struct sockaddr *)&service, sizeof(service))) != 0) {
     error_code = errno;
 
@@ -67,19 +65,17 @@ void connectServersClient()
 {
   FILE *server_port_fp;
   FILE *http_port_fp;
-  // Create client/server sockets
+
   server_port_fp = fopen("server_port", "w");
   createBindSocket_LogPort(&sockfd_server, server_port_fp);
   http_port_fp = fopen("http_port", "w");
   createBindSocket_LogPort(&sockfd_client, http_port_fp);
 
-  // Now server is ready to listen and verification
   if ((listen(sockfd_client, LISTEN_COUNT)) != 0 || (listen(sockfd_server, LISTEN_COUNT)) != 0) {
     printf("Listen failed...\n");
     exit(-1);
   }
 
-  // Accept the data packet from client and verification
   int i;
   for (i = 0; i < SERVER_COUNT; i++) {
     connfd_server[i] = acceptSession(sockfd_server);
@@ -131,7 +127,6 @@ int send_msg(int connfd_client, char *buffer)
   int RemainingBytesToSend = strlen(buffer);  // Sent message structure is known and in my control, thus strlen is fine
 
   while (RemainingBytesToSend > 0) {
-    // send does not guarantee that the entire message is sent
     BytesTransferred = send(connfd_client, CurPlacePtr, RemainingBytesToSend, 0);
     if (BytesTransferred <= 0) {
       printf("send() failed, error %d\n", errno);
@@ -139,9 +134,8 @@ int send_msg(int connfd_client, char *buffer)
     }
 
     RemainingBytesToSend -= BytesTransferred;
-    CurPlacePtr += BytesTransferred;  // pointer arithmetic
+    CurPlacePtr += BytesTransferred;
   }
-
   return 0;
 }
 
@@ -157,17 +151,14 @@ int recv_msg(int socket, unsigned int msgSeparatorCount, char **msgBuffer, unsig
       printf("recv() failed, error %d\n", errno);
       exit(-1);
     }
-    CurPlacePtr = CurPlacePtr + BytesJustTransferred;  // pointer arithmetic
+    CurPlacePtr = CurPlacePtr + BytesJustTransferred;
     TotalBytesTransferred += BytesJustTransferred;
     TotalAvailableBuffer -= BytesJustTransferred;
 
     if (memSeparatoreCount(*msgBuffer, TotalBytesTransferred) == msgSeparatorCount) {
-      // MSG Complete - end the session
       return 0;
     }
 
-    // MSG Not Complete, check if more buffer space allocation is needed to make sure no data is lost in next
-    // transaction. Keep at least BUFFER_INIT_SIZE bytes available.
     if (TotalAvailableBuffer < BUFFER_INIT_SIZE) {
       *msgBuffer = (char *)realloc(*msgBuffer, sizeof(char) * (*bufferSize + BUFFER_INIT_SIZE));
       if (*msgBuffer == NULL) {
