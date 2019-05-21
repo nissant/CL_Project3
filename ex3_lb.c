@@ -11,15 +11,21 @@
 void loadBalanceTraffic()
 {
   char *buffer = (char *)malloc(sizeof(char) * BUFFER_INIT_SIZE);
-  unsigned int buffer_size = BUFFER_INIT_SIZE;
+  unsigned int msg_size, buffer_size = BUFFER_INIT_SIZE;
   int next_server_index = 0;
 
   while (1) {
 
-    recv_msg(connfd_client, NO_BODY_REQUEST, &buffer, &buffer_size);
+    if (recv_msg(connfd_client, NO_BODY_REQUEST, &buffer, &buffer_size, &msg_size) != 0) {
+      // This is relevant for browser test - During page refresh a socket reconnect is required
+      closeSession(connfd_client);
+      connfd_client = acceptSession(sockfd_client);
+      continue;
+    }
 
+    checkInvalidRequest(buffer, msg_size);
     send_msg(connfd_server[next_server_index], buffer);
-    recv_msg(connfd_server[next_server_index], RESPONSE, &buffer, &buffer_size);
+    recv_msg(connfd_server[next_server_index], RESPONSE, &buffer, &buffer_size, &msg_size);
 
     send_msg(connfd_client, buffer);
     next_server_index++;

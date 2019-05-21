@@ -18,6 +18,7 @@
 
 #define HTTP_SEPARATORE_SIZE 4
 const char *HTTP_SEPARATORE = "\r\n\r\n";
+const char *SIGNAL_INVALID_REQUEST = "Invalid client request \r \r\n\r\n";
 
 unsigned int getRandomPortInRange_TestFail()
 {
@@ -120,6 +121,17 @@ unsigned int memSeparatoreCount(char *inBuffer, unsigned int dataSize)
   return count;
 }
 
+int checkInvalidRequest(char *inBuffer, unsigned int msg_size)
+{
+  char *string_end_pntr = memchr(inBuffer, '\0', msg_size);
+  if (string_end_pntr < (char *)(inBuffer + msg_size) && string_end_pntr != NULL) {
+    strcpy(inBuffer, SIGNAL_INVALID_REQUEST);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 int send_msg(int connfd_client, char *buffer)
 {
   char *CurPlacePtr = buffer;
@@ -139,7 +151,8 @@ int send_msg(int connfd_client, char *buffer)
   return 0;
 }
 
-int recv_msg(int socket, unsigned int msgSeparatorCount, char **msgBuffer, unsigned int *bufferSize)
+int recv_msg(int socket, unsigned int msgSeparatorCount, char **msgBuffer, unsigned int *bufferSize,
+             unsigned int *msgSize)
 {
   char *CurPlacePtr = *msgBuffer;
   int BytesJustTransferred = 0;
@@ -156,6 +169,7 @@ int recv_msg(int socket, unsigned int msgSeparatorCount, char **msgBuffer, unsig
     TotalAvailableBuffer -= BytesJustTransferred;
 
     if (memSeparatoreCount(*msgBuffer, TotalBytesTransferred) == msgSeparatorCount) {
+      *msgSize = TotalBytesTransferred;
       return 0;
     }
 
@@ -170,5 +184,5 @@ int recv_msg(int socket, unsigned int msgSeparatorCount, char **msgBuffer, unsig
     }
   }
   // recv() returns zero if connection was gracefully disconnected.
-  exit(-1);
+  return -1;
 }

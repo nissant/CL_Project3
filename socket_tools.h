@@ -10,6 +10,8 @@ int sockfd_server, connfd_server[SERVER_COUNT];
 void connectServersClient();
 int acceptSession(int sokcet);
 void closeSession(int socket);
-int recv_msg(int socket, unsigned int msgSeparatorCount, char **msgBuffer, unsigned int *bufferSize);
+int checkInvalidRequest(char *inBuffer, unsigned int msg_size);
+int recv_msg(int socket, unsigned int msgSeparatorCount, char **msgBuffer, unsigned int *bufferSize,
+             unsigned int *msgSize);
 int send_msg(int connfd_client, char *buffer);
 #endif
