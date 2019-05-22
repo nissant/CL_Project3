@@ -17,7 +17,7 @@ void loadBalanceTraffic()
   while (1) {
 
     if (recv_msg(connfd_client, NO_BODY_REQUEST, &buffer, &buffer_size, &msg_size) != 0) {
-      // This is relevant for browser test - During page refresh a socket reconnect is required
+      // This is relevant for browser test only - During page refresh a socket reconnect is required
       closeSession(connfd_client);
       connfd_client = acceptSession(sockfd_client);
       continue;
